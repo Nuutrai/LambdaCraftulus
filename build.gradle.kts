@@ -11,6 +11,7 @@ repositories {
 
 dependencies {
     testImplementation(kotlin("test"))
+    implementation("net.minestom:minestom-snapshots:7589b3b655")
 }
 
 tasks.test {
