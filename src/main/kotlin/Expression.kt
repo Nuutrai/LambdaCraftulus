@@ -1,4 +1,4 @@
-package me.chriss99.lambdaCraftulus
+package me.chriss99
 
 import java.util.UUID
 

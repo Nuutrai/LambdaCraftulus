@@ -1,6 +1,6 @@
-package me.chriss99.lambdaCraftulus
+package me.chriss99
 
-import me.chriss99.lambdaCraftulus.Expression.*
+import me.chriss99.Expression.*
 
 fun reduce(appl: Apply) : Expression {
     return when (appl.apply) {
