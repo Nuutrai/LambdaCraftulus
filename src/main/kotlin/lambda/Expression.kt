@@ -1,9 +1,7 @@
 package me.chriss99.lambda
 
-import java.util.UUID
-
 sealed class Expression {
-    class Var(val name: String, val uuid: UUID) : Expression()
+    class Var(val name: String) : Expression()
     class Lambda(val variable: Var, val body: Expression) : Expression()
     class Apply(val apply: Expression, val to: Expression) : Expression()
 
