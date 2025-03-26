@@ -17,10 +17,10 @@ private fun replace(expr: Expression, replace: Var, with: Expression) : Expressi
     }
 }
 
-fun reduceAll(expr: Expression, tech: (expr: Expression) -> Apply?) : Expression {
+fun reduceAll(expr: Expression, strategy: (expr: Expression) -> Apply?) : Expression {
     var current = expr
     while (true) {
-        val reducible = tech(expr) ?: break
+        val reducible = strategy(expr) ?: break
         current = reduce(reducible)
     }
     return current
