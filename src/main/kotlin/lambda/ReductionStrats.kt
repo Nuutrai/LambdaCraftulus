@@ -1,6 +1,6 @@
-package me.chriss99
+package me.chriss99.lambda
 
-import me.chriss99.Expression.*
+import me.chriss99.lambda.Expression.*
 import java.util.*
 
 fun lazyReducible(expr: Expression) : Apply? {
