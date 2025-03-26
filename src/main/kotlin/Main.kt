@@ -1,5 +1,6 @@
 package me.chriss99
 
+import me.chriss99.minestom.lambdaDisplayLogic
 import minestom.initInstance
 import minestom.onJoin
 import net.minestom.server.MinecraftServer
@@ -12,6 +13,7 @@ fun main() {
     val eventHandler = MinecraftServer.getGlobalEventHandler()
     initInstance(instanceContainer)
     onJoin(eventHandler, instanceContainer)
+    lambdaDisplayLogic(eventHandler)
     MojangAuth.init()
     minecraftServer.start("0.0.0.0", 25565)
 }
