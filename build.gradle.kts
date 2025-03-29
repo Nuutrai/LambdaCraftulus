@@ -11,7 +11,7 @@ repositories {
 
 dependencies {
     testImplementation(kotlin("test"))
-    implementation("net.minestom:minestom-snapshots:7589b3b655")
+    implementation("net.minestom:minestom-snapshots:0366b58bfe")
     implementation("org.tinylog:slf4j-tinylog:2.7.0")
     implementation("org.tinylog:tinylog-impl:2.7.0")
 }
