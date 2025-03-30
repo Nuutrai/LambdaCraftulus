@@ -6,21 +6,21 @@ import java.util.UUID
 import kotlin.reflect.KClass
 
 fun parse(tokens: List<Token>): Expression {
-    return parse(listOf(*tokens.toTypedArray(), Token.EndOfFile), 0, HashMap()).first
+    return parse(listOf(*tokens.toTypedArray(), Token.EndOfFile), 0, HashMap(), 0).first
 }
 
-fun parse(tokens: List<Token>, i: Int, ids: HashMap<String, UUID>): Pair<Expression, Int> {
+fun parse(tokens: List<Token>, i: Int, ids: HashMap<String, UUID>, cameFrom: Int, searching: KClass<out Token>? = null): Pair<Expression, Int> {
     when (val current = tokens[i]) {
         is Token.Var -> return Expression.Var(current.name, idOf(current.name, ids)) to i
         is Token.Lambda -> {
             var next = i+1
             val variables = mutableListOf<Expression.Var>()
             while (tokens[next] is Token.Var || next == i+1) {
-                variables.add(verifyToken<Token.Var>(tokens, next).name.let { Expression.Var(it, newID(it, ids, tokens, next)) })
+                variables.add(verifyToken<Token.Var>(tokens, next, i).name.let { Expression.Var(it, newID(it, ids, tokens, next)) })
                 next++
             }
             verifyToken<Token.Dot>(tokens, next, i)
-            val (body, i) = parse(tokens, next+1, ids)
+            val (body, i) = parse(tokens, next+1, ids, i)
 
             var lambda = Expression.Lambda(variables.removeLast(), body)
             while (variables.isNotEmpty())
@@ -29,23 +29,23 @@ fun parse(tokens: List<Token>, i: Int, ids: HashMap<String, UUID>): Pair<Express
             return lambda to i
         }
         is Token.LParen -> {
-            var (expr, exprEnd) = parse(tokens, i+1, ids)
+            var (expr, exprEnd) = parse(tokens, i+1, ids, i)
 
             while (tokens[exprEnd+1] !is Token.RParen) {
-                val res = parse(tokens, exprEnd+1, ids)
+                val res = parse(tokens, exprEnd+1, ids, i, Token.RParen::class)
                 expr = Expression.Apply(expr, res.first)
                 exprEnd = res.second
             }
 
             return expr to exprEnd+1
         }
-        else -> throw ParsingException.NoMatchingPatternException(tokens, i, Token.Var::class, Token.Lambda::class, Token.LParen::class)
+        else -> throw ParsingException.NoMatchingPatternException(tokens, cameFrom, i, *(if (searching != null) listOf(searching) else listOf()).toTypedArray(), Token.Var::class, Token.Lambda::class, Token.LParen::class)
     }
 }
 
 private fun newID(name: String, ids: HashMap<String, UUID>, tokens: List<Token>, index: Int): UUID {
     if (ids.containsKey(name))
-        throw ParsingException.NonUniqueVariableException(tokens, name, index)
+        throw ParsingException.NonUniqueVariableException(tokens, name, index, index)
     val id = UUID.randomUUID()
     ids[name] = id
     return id
@@ -55,33 +55,32 @@ fun <T> idOf(name: T, ids: HashMap<T, UUID>): UUID {
     return ids[name] ?: UUID.randomUUID().also { ids[name] = it }
 }
 
-private inline fun <reified T : Token> verifyToken(tokens: List<Token>, index: Int, vararg indexes: Int): T {
+private inline fun <reified T : Token> verifyToken(tokens: List<Token>, index: Int, cameFrom: Int): T {
     val token = tokens[index]
     if (token !is T)
-        throw ParsingException.UnexpectedTokenException(tokens, T::class, token::class, *indexes, index)
+        throw ParsingException.UnexpectedTokenException(tokens, T::class, token::class, cameFrom, index,)
     return token
 }
 
-sealed class ParsingException(val tokens: List<Token>, vararg val indexes: Int, message: String) : Exception(message) {
+sealed class ParsingException(val tokens: List<Token>, val cameFrom: Int, val problem: Int, message: String) : Exception(message) {
     override fun toString(): String {
         var message = "${this::class.simpleName}: $message" + System.lineSeparator()
         message += tokens.fold("") { a, b -> a + tokenToString(b) }
 
         val marker = MutableList(tokens.size) { " " }
-        for (i in indexes.first()..indexes.last())
+        for (i in cameFrom..problem)
             marker[i] = "-"
-        for (i in indexes)
-            marker[i] = "+"
-        marker[indexes.last()] = "^"
+        marker[cameFrom] = "+"
+        marker[problem] = "^"
 
 
         return message + System.lineSeparator() + marker.fold("") { a, b -> a + b }
     }
 
-    class UnexpectedTokenException(tokens: List<Token>, expected: KClass<out Token>, found: KClass<out Token>, vararg indexes: Int) : ParsingException(tokens, *indexes,
+    class UnexpectedTokenException(tokens: List<Token>, expected: KClass<out Token>, found: KClass<out Token>, cameFrom: Int, problem: Int) : ParsingException(tokens, cameFrom, problem,
         message = "Expected ${expected.simpleName} but found ${found.simpleName}.")
-    class NoMatchingPatternException(tokens: List<Token>, index: Int, vararg expected: KClass<out Token>) : ParsingException(tokens, index,
-        message = "Expected one of ${expected.map { it.simpleName }} but found ${tokens[index]::class.simpleName}.")
-    class NonUniqueVariableException(tokens: List<Token>, name: String, index: Int) : ParsingException(tokens, index,
+    class NoMatchingPatternException(tokens: List<Token>, cameFrom: Int, problem: Int, vararg expected: KClass<out Token>) : ParsingException(tokens, cameFrom, problem,
+        message = "Expected one of ${expected.map { it.simpleName }} but found ${tokens[problem]::class.simpleName}.")
+    class NonUniqueVariableException(tokens: List<Token>, name: String, prevBound: Int, problem: Int) : ParsingException(tokens, prevBound, problem,
         message = "\"$name\" is already bound, but found Lambda binding it as its variable!")
 }

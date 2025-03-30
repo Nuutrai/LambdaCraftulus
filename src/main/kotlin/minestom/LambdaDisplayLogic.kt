@@ -72,12 +72,11 @@ object LambdaParser {
             lazyReduce(parsed).toString()
         } catch (p: ParsingException) {
 
-            val marker = List(p.tokens.size) { " " }.toMutableList()
-            for (i in p.indexes.first()..p.indexes.last())
+            val marker = MutableList(p.tokens.size) { " " }
+            for (i in p.cameFrom..p.problem)
                 marker[i] = "-"
-            for (i in p.indexes)
-                marker[i] = "+"
-            marker[p.indexes.last()] = "^"
+            marker[p.cameFrom] = "+"
+            marker[p.problem] = "^"
 
 
             for (i in 0..<marker.size) {
