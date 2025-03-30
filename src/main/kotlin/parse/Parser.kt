@@ -13,11 +13,20 @@ fun parse(tokens: List<Token>, i: Int, ids: HashMap<String, UUID>): Pair<Express
     when (val current = tokens[i]) {
         is Token.Var -> return Expression.Var(current.name, idOf(current.name, ids)) to i
         is Token.Lambda -> {
-            val variable = verifyToken<Token.Var>(tokens, i+1, i).name.let { Expression.Var(it, newID(it, ids, tokens, i+1)) }
-            verifyToken<Token.Dot>(tokens, i+2, i, i+1)
-            val (body, i) = parse(tokens, i+3, ids)
+            var next = i+1
+            val variables = mutableListOf<Expression.Var>()
+            while (tokens[next] is Token.Var || next == i+1) {
+                variables.add(verifyToken<Token.Var>(tokens, next).name.let { Expression.Var(it, newID(it, ids, tokens, next)) })
+                next++
+            }
+            verifyToken<Token.Dot>(tokens, next, i)
+            val (body, i) = parse(tokens, next+1, ids)
 
-            return Expression.Lambda(variable, body) to i
+            var lambda = Expression.Lambda(variables.removeLast(), body)
+            while (variables.isNotEmpty())
+                lambda = Expression.Lambda(variables.removeLast(), lambda)
+
+            return lambda to i
         }
         is Token.LParen -> {
             var (expr, exprEnd) = parse(tokens, i+1, ids)
