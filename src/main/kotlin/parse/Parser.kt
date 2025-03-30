@@ -9,7 +9,7 @@ fun parse(tokens: List<Token>): Expression {
     return parse(listOf(*tokens.toTypedArray(), Token.EndOfFile), 0, HashMap(), 0).first
 }
 
-fun parse(tokens: List<Token>, i: Int, ids: HashMap<String, Pair<UUID, Int>>, cameFrom: Int, searching: KClass<out Token>? = null): Pair<Expression, Int> {
+private fun parse(tokens: List<Token>, i: Int, ids: HashMap<String, Pair<UUID, Int>>, cameFrom: Int, searching: KClass<out Token>? = null): Pair<Expression, Int> {
     when (val current = tokens[i]) {
         is Token.Var -> return Expression.Var(current.name, idOf(current.name, i, ids)) to i
         is Token.Lambda -> {
