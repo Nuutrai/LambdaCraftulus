@@ -9,9 +9,9 @@ fun parse(tokens: List<Token>): Expression {
     return parse(listOf(*tokens.toTypedArray(), Token.EndOfFile), 0, HashMap(), 0).first
 }
 
-fun parse(tokens: List<Token>, i: Int, ids: HashMap<String, UUID>, cameFrom: Int, searching: KClass<out Token>? = null): Pair<Expression, Int> {
+fun parse(tokens: List<Token>, i: Int, ids: HashMap<String, Pair<UUID, Int>>, cameFrom: Int, searching: KClass<out Token>? = null): Pair<Expression, Int> {
     when (val current = tokens[i]) {
-        is Token.Var -> return Expression.Var(current.name, idOf(current.name, ids)) to i
+        is Token.Var -> return Expression.Var(current.name, idOf(current.name, i, ids)) to i
         is Token.Lambda -> {
             var next = i+1
             val variables = mutableListOf<Expression.Var>()
@@ -43,16 +43,17 @@ fun parse(tokens: List<Token>, i: Int, ids: HashMap<String, UUID>, cameFrom: Int
     }
 }
 
-private fun newID(name: String, ids: HashMap<String, UUID>, tokens: List<Token>, index: Int): UUID {
-    if (ids.containsKey(name))
-        throw ParsingException.NonUniqueVariableException(tokens, name, index, index)
+private fun newID(name: String, ids: HashMap<String, Pair<UUID, Int>>, tokens: List<Token>, index: Int): UUID {
+    val prevBound = ids[name]
+    if (prevBound != null)
+        throw ParsingException.NonUniqueVariableException(tokens, name, prevBound.second, index)
     val id = UUID.randomUUID()
-    ids[name] = id
+    ids[name] = id to index
     return id
 }
 
-fun <T> idOf(name: T, ids: HashMap<T, UUID>): UUID {
-    return ids[name] ?: UUID.randomUUID().also { ids[name] = it }
+private fun idOf(name: String, index: Int, ids: HashMap<String, Pair<UUID, Int>>): UUID {
+    return ids[name]?.first ?: UUID.randomUUID().also { ids[name] = it to index }
 }
 
 private inline fun <reified T : Token> verifyToken(tokens: List<Token>, index: Int, cameFrom: Int): T {
