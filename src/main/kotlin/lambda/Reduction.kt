@@ -38,7 +38,7 @@ private fun idOf(name: UUID, ids: java.util.HashMap<UUID, UUID>): UUID {
     return ids[name] ?: UUID.randomUUID().also { ids[name] = it }
 }
 
-private fun reduceAt(expr: Expression, appl: Apply): Expression {
+fun reduceAt(expr: Expression, appl: Apply): Expression {
     if (expr === appl)
         return reduce(expr)
 
