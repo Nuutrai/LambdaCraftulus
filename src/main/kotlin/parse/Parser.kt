@@ -58,7 +58,7 @@ sealed class ParsingException(val tokens: List<Token>, vararg val indexes: Int, 
         var message = "${this::class.simpleName}: $message" + System.lineSeparator()
         message += tokens.fold("") { a, b -> a + tokenToString(b) }
 
-        val marker = List(tokens.size) { " " }.toMutableList()
+        val marker = MutableList(tokens.size) { " " }
         for (i in indexes.first()..indexes.last())
             marker[i] = "-"
         for (i in indexes)
