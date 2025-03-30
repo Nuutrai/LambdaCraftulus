@@ -1,7 +1,6 @@
 package me.chriss99.lambda
 
 import me.chriss99.lambda.Expression.*
-import me.chriss99.parse.idOf
 import java.util.UUID
 
 fun reduce(appl: Apply): Expression {
@@ -33,6 +32,10 @@ private fun newID(name: UUID, ids: java.util.HashMap<UUID, UUID>): UUID {
     val id = UUID.randomUUID()
     ids[name] = id
     return id
+}
+
+private fun idOf(name: UUID, ids: java.util.HashMap<UUID, UUID>): UUID {
+    return ids[name] ?: UUID.randomUUID().also { ids[name] = it }
 }
 
 private fun reduceAt(expr: Expression, appl: Apply): Expression {
