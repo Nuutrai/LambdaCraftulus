@@ -20,14 +20,15 @@ fun parse(tokens: List<Token>, i: Int, ids: HashMap<String, UUID>): Pair<Express
             return Expression.Lambda(variable, body) to i
         }
         is Token.LParen -> {
-            val (expr, exprEnd) = parse(tokens, i+1, ids)
-            if (tokens[exprEnd+1] is Token.RParen)
-                return expr to exprEnd+1
+            var (expr, exprEnd) = parse(tokens, i+1, ids)
 
-            val (to, next) = parse(tokens, exprEnd+1, ids)
-            verifyToken<Token.RParen>(tokens, next+1, i)
+            while (tokens[exprEnd+1] !is Token.RParen) {
+                val res = parse(tokens, exprEnd+1, ids)
+                expr = Expression.Apply(expr, res.first)
+                exprEnd = res.second
+            }
 
-            return Expression.Apply(expr, to) to next+1
+            return expr to exprEnd+1
         }
         else -> throw ParsingException.NoMatchingPatternException(tokens, i, Token.Var::class, Token.Lambda::class, Token.LParen::class)
     }
