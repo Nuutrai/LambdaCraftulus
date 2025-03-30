@@ -1,8 +1,8 @@
 package me.chriss99.parse
 
 import me.chriss99.lambda.Expression
-import java.util.HashMap
 import java.util.UUID
+import kotlin.collections.HashMap
 import kotlin.reflect.KClass
 
 fun parse(tokens: List<Token>): Expression {
@@ -20,7 +20,7 @@ private fun parse(tokens: List<Token>, i: Int, ids: HashMap<String, Pair<UUID, I
                 next++
             }
             verifyToken<Token.Dot>(tokens, next, i)
-            val (body, i) = parse(tokens, next+1, ids, i)
+            val (body, i) = parse(tokens, next+1, HashMap(ids), i)
 
             var lambda = Expression.Lambda(variables.removeLast(), body)
             while (variables.isNotEmpty())
@@ -29,10 +29,10 @@ private fun parse(tokens: List<Token>, i: Int, ids: HashMap<String, Pair<UUID, I
             return lambda to i
         }
         is Token.LParen -> {
-            var (expr, exprEnd) = parse(tokens, i+1, ids, i)
+            var (expr, exprEnd) = parse(tokens, i+1, HashMap(ids), i)
 
             while (tokens[exprEnd+1] !is Token.RParen) {
-                val res = parse(tokens, exprEnd+1, ids, i, Token.RParen::class)
+                val res = parse(tokens, exprEnd+1, HashMap(ids), i, Token.RParen::class)
                 expr = Expression.Apply(expr, res.first)
                 exprEnd = res.second
             }
