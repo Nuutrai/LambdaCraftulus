@@ -14,8 +14,8 @@ fun main() {
     createVoidBiome()
     val instanceContainer = initInstance()
     onJoin(eventHandler, instanceContainer)
-    LambdaEventHandler(eventHandler, LambdaBlockManager())
+    LambdaEventHandler(eventHandler)
         .registerEvents()
-    MojangAuth.init()
+//    MojangAuth.init()
     minecraftServer.start("0.0.0.0", 25565)
 }
